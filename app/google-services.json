@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "771373107544",
+    "project_id": "mechanik-se",
+    "firebase_url": "https://mechanik-se-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "storage_bucket": "mechanik-se.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771373107544:android:92eca2302ecf5e46333d2d",
+        "android_client_info": {
+          "package_name": "com.jj.dev.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAD9EM9MWLaAAibwYIFHJUNM10iyUO86VU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
