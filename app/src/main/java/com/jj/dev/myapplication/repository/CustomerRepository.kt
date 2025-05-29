@@ -31,36 +31,57 @@ class CustomerRepository @Inject constructor( // Renamed from UserRepository
     }
 
     fun addDummyVehicleToCustomer(uid: String, name: String, email: String): Task<Void> {
-        val dummyVehicleId = database.getReference("vehicles_placeholder").push().key ?: "dummy_v_${System.currentTimeMillis()}"
-        val dummyAppointmentId = database.getReference("appointments_placeholder").push().key ?: "dummy_a_${System.currentTimeMillis()}"
-
-        val dummyVehicle = Vehicle(
-            vehicleId = dummyVehicleId,
+        // First Dummy Vehicle
+        val dummyVehicleId1 = database.getReference("vehicles_placeholder").push().key ?: "dummy_v1_${System.currentTimeMillis()}"
+        val dummyAppointmentId1 = database.getReference("appointments_placeholder").push().key ?: "dummy_a1_${System.currentTimeMillis()}"
+        val dummyVehicle1 = Vehicle(
+            vehicleId = dummyVehicleId1,
             userId = uid,
-            vehicleModel = "Default Sedan",
-            vehiclePlate = "ABC-123",
+            vehicleModel = "2005 Toyota Camry",
+            vehiclePlate = "L 3502 GR",
             serviceHistory = listOf(
                 Appointment(
-                    appointmentId = dummyAppointmentId,
+                    appointmentId = dummyAppointmentId1,
                     userId = uid,
-                    vehicleId = dummyVehicleId,
+                    vehicleId = dummyVehicleId1,
                     date = "2024-01-01",
-                    description = "Initial Setup",
+                    description = "Initial Setup for Sedan",
                     serviceType = "System Generated"
                 )
             )
         )
+
+        // Second Dummy Vehicle
+        val dummyVehicleId2 = database.getReference("vehicles_placeholder").push().key ?: "dummy_v2_${System.currentTimeMillis()}"
+        val dummyAppointmentId2 = database.getReference("appointments_placeholder").push().key ?: "dummy_a2_${System.currentTimeMillis()}"
+        val dummyVehicle2 = Vehicle(
+            vehicleId = dummyVehicleId2,
+            userId = uid,
+            vehicleModel = "2014 Lexus LS460",
+            vehiclePlate = "L 5002 UR",
+            serviceHistory = listOf(
+                Appointment(
+                    appointmentId = dummyAppointmentId2,
+                    userId = uid,
+                    vehicleId = dummyVehicleId2,
+                    date = "2024-01-02",
+                    description = "Initial Setup for SUV",
+                    serviceType = "System Generated"
+                )
+            )
+        )
+
         val initialCustomer = Customer(
             userId = uid,
             email = email,
             name = name,
             role = "Customer",
-            contact = "",
-            vehicles = listOf(dummyVehicle)
+            contact = "", // Can be updated later via profile screen
+            vehicles = listOf(dummyVehicle1, dummyVehicle2) // Add both dummy vehicles
         )
-        // Using saveCustomerProfile which essentially does the same as setValue here
+
         return saveCustomerProfile(initialCustomer)
-            .addOnSuccessListener { Log.d(TAG, "Full customer profile with dummy vehicle created for $uid") }
+            .addOnSuccessListener { Log.d(TAG, "Full customer profile with two dummy vehicles created for $uid") }
             .addOnFailureListener { e -> Log.e(TAG, "Failed to create full customer profile for $uid", e) }
     }
 
