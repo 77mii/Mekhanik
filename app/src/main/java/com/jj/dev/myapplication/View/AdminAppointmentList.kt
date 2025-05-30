@@ -19,29 +19,50 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.jj.dev.myapplication.Model.Appointment
 import com.jj.dev.myapplication.Model.AppointmentStatusEnum
-// Import CustomerViewModel if you need to fetch customer names based on userId in appointment
-// import com.jj.dev.myapplication.viewmodel.CustomerViewModel
+
+import com.jj.dev.myapplication.viewmodel.CustomerViewModel
 import com.jj.dev.myapplication.viewmodel.AppointmentViewModel
 import com.jj.dev.myapplication.viewmodel.AppointmentsListState
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminAppointmentListView(
     navController: NavHostController,
-    appointmentViewModel: AppointmentViewModel = hiltViewModel()
-    // customerViewModel: CustomerViewModel = hiltViewModel() // Inject if needed for customer details
+    appointmentViewModel: AppointmentViewModel = hiltViewModel(),
+    customerViewModel: CustomerViewModel = hiltViewModel() // Inject CustomerViewModel
 ) {
     val allAppointmentsState by appointmentViewModel.allAppointmentsState.observeAsState(AppointmentsListState.Idle)
+    val cachedUserProfiles by customerViewModel.cachedUserProfiles.observeAsState(emptyMap())
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) { // Load all appointments on entry
         Log.d("AdminApptListView", "Loading all appointments.")
-        appointmentViewModel.loadAllAppointments()
+        if (allAppointmentsState == AppointmentsListState.Idle || allAppointmentsState is AppointmentsListState.Error) {
+            appointmentViewModel.loadAllAppointments()
+        }
+    }
+
+    // When appointments are loaded, fetch profiles for their user IDs
+    LaunchedEffect(allAppointmentsState) {
+        if (allAppointmentsState is AppointmentsListState.Loaded) {
+            val appointments = (allAppointmentsState as AppointmentsListState.Loaded).appointments
+            val userIdsToFetch = appointments.map { it.userId }.distinct()
+            userIdsToFetch.forEach { userId ->
+                if (userId.isNotBlank()) {
+                    Log.d("AdminApptListView", "Requesting profile for user ID: $userId")
+                    customerViewModel.fetchAndCacheCustomerProfileIfNeeded(userId)
+                }
+            }
+        }
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            Log.d("AdminApptListView", "Disposing. Clearing all appointments list state.")
+            Log.d("AdminApptListView", "Disposing. Clearing all appointments list state from VM.")
             appointmentViewModel.clearAllAppointmentsListState()
+            // Consider if cachedUserProfiles should be cleared here or managed differently
+            // customerViewModel.clearAllCachedProfiles()
         }
     }
 
@@ -66,8 +87,7 @@ fun AdminAppointmentListView(
             when (val state = allAppointmentsState) {
                 is AppointmentsListState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                        Text("Loading all appointments...")
+                        CircularProgressIndicator(); Text("Loading all appointments...")
                     }
                 }
                 is AppointmentsListState.Loaded -> {
@@ -78,8 +98,10 @@ fun AdminAppointmentListView(
                     } else {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(state.appointments) { appointment ->
-                                AdminAppointmentListItem( // Use a specific item composable for admin if needed
+                                val customerName = cachedUserProfiles[appointment.userId]?.name ?: "Loading..."
+                                AdminAppointmentListItem(
                                     appointment = appointment,
+                                    customerName = customerName, // Pass customer name
                                     onClick = {
                                         appointmentViewModel.selectAppointment(appointment)
                                         navController.navigate("admin_appointment_detail/${appointment.appointmentId}")
@@ -101,8 +123,7 @@ fun AdminAppointmentListView(
                 }
                 is AppointmentsListState.Idle -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                        Text("Initializing...")
+                        CircularProgressIndicator(); Text("Initializing...")
                     }
                 }
             }
@@ -111,10 +132,7 @@ fun AdminAppointmentListView(
 }
 
 @Composable
-fun AdminAppointmentListItem(appointment: Appointment, onClick: () -> Unit) {
-    // This can be similar to Customer's AppointmentItem or customized for Admin needs
-    // For now, let's reuse a structure similar to CustomerAppointmentsView.AppointmentItem
-    // but without direct vehicle object, as admin might not have customer's vehicles loaded directly.
+fun AdminAppointmentListItem(appointment: Appointment, customerName: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,11 +149,11 @@ fun AdminAppointmentListItem(appointment: Appointment, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Vehicle ID: ${appointment.vehicleId}", // Admin sees vehicle ID directly
+                    text = "Customer: $customerName (ID: ${appointment.userId})", // Show customer name
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "Customer ID: ${appointment.userId}", // Admin sees customer ID
+                    text = "Vehicle ID: ${appointment.vehicleId}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(4.dp))
