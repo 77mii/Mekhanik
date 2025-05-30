@@ -254,6 +254,8 @@ class AppointmentViewModel @Inject constructor(
     private val _singleAppointmentLoadState = MutableLiveData<SingleAppointmentLoadState>(SingleAppointmentLoadState.Idle)
     val singleAppointmentLoadState: LiveData<SingleAppointmentLoadState> = _singleAppointmentLoadState
 
+    private val _allAppointmentsState = MutableLiveData<AppointmentsListState>(AppointmentsListState.Idle)
+    val allAppointmentsState: LiveData<AppointmentsListState> = _allAppointmentsState
 
     companion object { private const val TAG = "AppointmentViewModel" }
 
@@ -280,6 +282,23 @@ class AppointmentViewModel @Inject constructor(
             }
             .addOnFailureListener { exception ->
                 _customerAppointmentsState.value = AppointmentsListState.Error(exception.localizedMessage ?: "Failed to load appointments.")
+            }
+    }
+
+    fun loadAllAppointments() {
+        if (_allAppointmentsState.value is AppointmentsListState.Loading) return
+        _allAppointmentsState.value = AppointmentsListState.Loading
+        Log.d(TAG, "Loading all appointments for Admin.")
+        appointmentRepository.fetchAllAppointments()
+            .addOnSuccessListener { dataSnapshot ->
+                val list = mutableListOf<Appointment>()
+                dataSnapshot.children.mapNotNullTo(list) { it.getValue(Appointment::class.java) }
+                _allAppointmentsState.value = if (list.isEmpty()) AppointmentsListState.Empty else AppointmentsListState.Loaded(list.sortedByDescending { it.date })
+                Log.d(TAG, "Loaded ${list.size} total appointments.")
+            }
+            .addOnFailureListener { e ->
+                _allAppointmentsState.value = AppointmentsListState.Error(e.localizedMessage ?: "Failed to load all appointments.")
+                Log.e(TAG, "Error loading all appointments", e)
             }
     }
 
@@ -372,7 +391,7 @@ class AppointmentViewModel @Inject constructor(
     }
 
     fun resetBookingStatus() { _bookingUiStatus.value = BookingUiStatus.Idle }
-    fun clearAppointmentsListState() { _customerAppointmentsState.value = AppointmentsListState.Idle }
+    fun clearAllAppointmentsListState() { _allAppointmentsState.value = AppointmentsListState.Idle }
     fun selectAppointment(appointment: Appointment) {
         _selectedAppointment.value = appointment
         _singleAppointmentLoadState.value = SingleAppointmentLoadState.Success(appointment)

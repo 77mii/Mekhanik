@@ -51,4 +51,9 @@ class AppointmentRepository @Inject constructor(
         Log.d(TAG, "Fetching single appointment by ID: $appointmentId")
         return database.getReference("appointments").child(appointmentId).get()
     }
+
+    fun fetchAllAppointments(): Task<DataSnapshot> {
+        Log.d(TAG, "Fetching all appointments for Admin view.")
+        return database.getReference("appointments").get()
+    }
 }

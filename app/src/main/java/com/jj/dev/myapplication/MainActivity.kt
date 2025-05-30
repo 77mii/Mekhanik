@@ -113,6 +113,19 @@ fun MainAppNavHost(navController: NavHostController, startDestination: String) {
             )
         }
         // Define other routes like "customer_profile_screen" etc.
+        // Admin Appointment Routes
+        composable("admin_appointments_list") {
+            AdminAppointmentListView(navController = navController)
+        }
+        composable(
+            route = "admin_appointment_detail/{appointmentId}",
+            arguments = listOf(navArgument("appointmentId") { type = NavType.StringType; nullable = true })
+        ) { backStackEntry ->
+            AdminAppointmentDetailView(
+                navController = navController,
+                appointmentIdFromNav = backStackEntry.arguments?.getString("appointmentId")
+            )
+        }
     }
 }
 
