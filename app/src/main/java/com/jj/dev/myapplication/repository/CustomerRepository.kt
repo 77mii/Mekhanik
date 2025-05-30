@@ -45,7 +45,7 @@ class CustomerRepository @Inject constructor( // Renamed from UserRepository
                     userId = uid,
                     vehicleId = dummyVehicleId1,
                     date = "2024-01-01",
-                    description = "Initial Setup for Sedan",
+                    description = "Initial Setup for Camry",
                     serviceType = "System Generated"
                 )
             )
@@ -65,7 +65,7 @@ class CustomerRepository @Inject constructor( // Renamed from UserRepository
                     userId = uid,
                     vehicleId = dummyVehicleId2,
                     date = "2024-01-02",
-                    description = "Initial Setup for SUV",
+                    description = "Initial Setup for LS460",
                     serviceType = "System Generated"
                 )
             )
